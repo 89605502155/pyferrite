@@ -16,6 +16,10 @@ Cargo.lock
 *.joblib
 *.h5
 *.hdf5
+# ...except the small reference files the tests read
+!/tests/fixtures/*.pkl
+!/tests/fixtures/*.joblib
+!/tests/fixtures/*.h5
 
 # Python
 __pycache__/

@@ -5,7 +5,7 @@
 [![GitHub](https://img.shields.io/badge/github-89605502155%2Fpyferrite-blue?logo=github)](https://github.com/89605502155/pyferrite)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-green.svg)](https://github.com/89605502155/pyferrite/blob/main/LICENSE)
 
-Source code: <https://github.com/89605502155/pyferrite>, release [`v0.0.1`](https://github.com/89605502155/pyferrite/releases/tag/v0.0.1).
+Source code: <https://github.com/89605502155/pyferrite>, release [`v0.0.2`](https://github.com/89605502155/pyferrite/releases/tag/v0.0.2).
 
 Read and write Python machine-learning artefacts from Rust — `.npy`, `.npz`,
 `.pkl`, `.pt`, `.joblib` and `.h5` — with **no C, no C++, no FFI and no
@@ -16,7 +16,7 @@ build it, including on bare-metal and embedded targets.
 
 ```toml
 [dependencies]
-pyferrite = "0.0.1"
+pyferrite = "0.0.2"
 ```
 
 ## Why
@@ -121,8 +121,10 @@ assert!(write("x.npy", &Value::Str("hello".into())).is_err());
 Pickle is an executable format, and `pyferrite` does not execute it. The
 virtual machine resolves an allow-list of numpy, torch and `collections`
 constructors; anything else becomes an inert [`PyObject`] that records the
-class name and its arguments without calling anything. Modules such as `os`,
-`sys` and `subprocess` are refused outright. Allocation is bounded by
+class name and its arguments without calling anything. References to `os`,
+`sys`, `subprocess`, `eval` and similar are refused unless
+`ReadOptions::allow_unknown_globals` asks to capture them inertly for
+inspection. Allocation is bounded by
 `ReadOptions::max_alloc`, so a hostile header cannot exhaust memory.
 
 ## Dataframes
@@ -160,7 +162,7 @@ files still work.
 
 ## Status
 
-Version 0.0.1 is the first public release: complete enough to move real models
+Version 0.0.2 is an early release: complete enough to move real models
 between Python and Rust, but the API may still change before 0.1.0.
 
 The minimum supported Rust version is 1.70 for the default features and for

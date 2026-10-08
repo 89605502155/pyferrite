@@ -29,6 +29,10 @@ pub fn index_labels(v: Option<&Value>) -> Vec<String> {
                     {
                         return labels;
                     }
+                    // pandas 3: `data` is an ArrowStringArray over pyarrow buffers.
+                    if let Some(Array::Str(s)) = d.get("data").and_then(values_array) {
+                        return s.iter().cloned().collect();
+                    }
                     if let Some(r) = range_index(d) {
                         return r.into_iter().map(|i| i.to_string()).collect();
                     }

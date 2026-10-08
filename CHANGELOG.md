@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.0.2](https://github.com/89605502155/pyferrite/releases/tag/v0.0.2)
+
+Source: <https://github.com/89605502155/pyferrite/tree/v0.0.2>
+
+Found by an end-to-end validation against files written by current Python
+libraries (pandas 3.0, scikit-learn 1.9, PyTorch 2.14, h5py 3.14).
+
+### Fixed
+
+- **pandas 3.0 frames.** Column labels stored as an `ArrowStringArray`
+  (pyarrow buffers) were lost and came back as `column_0`, `column_1`, ...
+  Pickled Apache Arrow arrays (`pyarrow.lib._restore_array`,
+  `chunked_array`) of strings, large strings, int32/int64 and float/double
+  are now decoded without pyarrow, so labels and string columns survive.
+- **Structured numpy arrays inside pickles** (for example the node table of a
+  scikit-learn `KDTree` inside a fitted `KNeighborsClassifier`) no longer fail
+  with "structured numpy dtype inside a pickle". Packed record arrays decode to
+  a `Frame`, as they do from `.npy`; padded (`align=True`) layouts are refused
+  with a clear error. The same applies to arrays joblib stores after the
+  pickle stream.
+- **h5py booleans.** numpy `bool` datasets, which h5py writes as an HDF5 enum
+  `{FALSE = 0, TRUE = 1}`, were read as `uint8`; they now come back as `bool`.
+
+### Documentation
+
+- `ReadOptions::allow_unknown_globals` is described as it behaves: unknown
+  classes are always captured as inert `PyObject`s, and the option only lets
+  blocklisted callables (`os`, `sys`, `subprocess`, `eval`, ...) be captured
+  for inspection instead of refused. Nothing is executed in either mode.
+
+### Tests
+
+- `tests/python_fixtures.rs` reads small files written by pandas 3.0,
+  scikit-learn (pickle and joblib) and h5py, and a pickle that would call
+  `os.system`, which must be refused.
+
 ## [0.0.1](https://github.com/89605502155/pyferrite/releases/tag/v0.0.1) — first public release
 
 Source: <https://github.com/89605502155/pyferrite/tree/v0.0.1>

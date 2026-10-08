@@ -8,7 +8,7 @@ use super::machine::Machine;
 use super::np_rebuild::as_dtype;
 use crate::dtype::DType;
 use crate::error::{Error, Result};
-use crate::value::{from_bytes, Value};
+use crate::value::Value;
 
 fn is_wrapper(v: &Value) -> bool {
     matches!(v, Value::Object(o)
@@ -64,13 +64,6 @@ impl<'a, 'b> Machine<'a, 'b> {
             return Err(Error::invalid("joblib array exceeds max_alloc"));
         }
         let raw = self.cur.take(n * esz)?;
-        let read_shape: Vec<usize> =
-            if fortran { shape.iter().rev().copied().collect() } else { shape.clone() };
-        let mut arr = from_bytes(&dt, endian, &read_shape, raw)?;
-        if fortran && shape.len() > 1 {
-            let axes: Vec<usize> = (0..shape.len()).rev().collect();
-            arr = crate::formats::permute(arr, &axes);
-        }
-        Ok(Value::Array(crate::formats::apply_cast(arr, self.opts)?))
+        super::np_rebuild::decode_raw(dt, endian, shape, fortran, raw, self.opts)
     }
 }

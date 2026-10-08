@@ -24,11 +24,12 @@ pub struct ReadOptions {
     pub cast_policy: CastPolicy,
     /// Override format auto-detection.
     pub format: Option<Format>,
-    /// Execute `REDUCE`/`BUILD` for classes outside the numpy/torch allow-list.
+    /// Also capture callables on the code-execution blocklist (`os`, `sys`,
+    /// `subprocess`, `eval`, ...) as inert [`crate::value::PyObject`] values.
     ///
-    /// Left `false` by default: an unrestricted pickle is arbitrary-code
-    /// shaped, and this crate never runs Python anyway, so unknown classes are
-    /// captured as inert [`crate::value::PyObject`] values instead.
+    /// `false` by default: such a reference is refused with an error. Other
+    /// classes outside the numpy/torch allow-list are always captured inertly.
+    /// Nothing is executed in either mode.
     pub allow_unknown_globals: bool,
     /// Hard ceiling on a single allocation, in bytes. Guards against corrupt
     /// or hostile headers claiming petabyte-sized arrays. Default: 8 GiB.
@@ -97,11 +98,12 @@ impl ReadOptions {
 }
 
 impl ReadOptions {
-    /// Allow classes outside the built-in allow-list to be captured as inert
-    /// [`PyObject`](crate::value::PyObject) values.
+    /// Capture blocklisted callables (`os.system`, `eval`, ...) as inert
+    /// [`PyObject`](crate::value::PyObject) values instead of refusing the file,
+    /// for inspecting a suspicious pickle.
     ///
-    /// Nothing is ever executed either way; this only decides whether an
-    /// unrecognised class is preserved or reported as an error.
+    /// Nothing is ever executed either way. Classes that are merely unknown,
+    /// such as a fitted scikit-learn estimator, are captured inertly by default.
     pub fn allow_unknown_globals(mut self, yes: bool) -> Self {
         self.allow_unknown_globals = yes;
         self

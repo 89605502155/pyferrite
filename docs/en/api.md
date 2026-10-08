@@ -107,7 +107,7 @@ Every method takes `self` and returns `Self`, so they chain. All are optional.
 | `float_as(FloatKind)` | `FloatKind` | none | Convert every float array to this width: `F8E4M3`, `F8E5M2`, `F16`, `BF16`, `F32`, `F64`, `F128`. |
 | `cast_policy(CastPolicy)` | `CastPolicy` | `Strict` | What to do when a value does not fit. See [types.md](types.md#casting). |
 | `format(Format)` | `Format` | auto | Skip detection and force a reader. |
-| `allow_unknown_globals(bool)` | `bool` | `false` | Capture unrecognised Python classes as inert `PyObject`s instead of erroring. Nothing is executed either way. |
+| `allow_unknown_globals(bool)` | `bool` | `false` | Capture blocklisted callables (`os`, `eval`, ...) as inert `PyObject`s instead of refusing the file. Unknown classes are captured inertly either way, and nothing is executed. |
 | `max_alloc(usize)` | `usize` | 8 GiB | Refuse any single allocation above this. Protects against hostile or corrupt headers. |
 | `keep_record_arrays(bool)` | `bool` | `false` | Keep numpy record arrays as raw structured arrays rather than converting them to a `Frame`. |
 

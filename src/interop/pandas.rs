@@ -12,6 +12,7 @@
 use crate::error::Result;
 use crate::value::{Array, Frame, Series, Value};
 
+mod arrow;
 mod blocks;
 mod index;
 

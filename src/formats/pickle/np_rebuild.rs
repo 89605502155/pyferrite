@@ -35,11 +35,12 @@ pub(crate) fn as_dtype(v: &Value) -> Result<(DType, Endian)> {
                 Some(Value::Tuple(t)) => t.get(1).and_then(|x| x.as_str()).unwrap_or("|"),
                 _ => "|",
             };
-            // A structured dtype puts its field description in state[4].
+            // A structured dtype puts its field names in state[3] and
+            // `{name: (dtype, offset)}` in state[4].
             if let Some(Value::Tuple(t)) = o.state.as_deref() {
-                if let Some(Value::Dict(_)) = t.get(4) {
+                if let (Some(names), Some(Value::Dict(fields))) = (t.get(3), t.get(4)) {
                     if name.starts_with('V') {
-                        return Err(Error::unsupported("structured numpy dtype inside a pickle"));
+                        return struct_dtype(names, fields, t.get(5).and_then(|v| v.as_i64()));
                     }
                 }
             }
@@ -49,6 +50,49 @@ pub(crate) fn as_dtype(v: &Value) -> Result<(DType, Endian)> {
             Err(Error::pickle(format!("expected a numpy dtype, found `{}`", other.type_name())))
         }
     }
+}
+
+/// Rebuild a packed structured dtype from its pickled field table.
+///
+/// Fields must follow each other without padding, which is what numpy
+/// produces unless `align=True` was requested; padded layouts are refused.
+fn struct_dtype(
+    names: &Value,
+    fields: &crate::value::Dict,
+    itemsize: Option<i64>,
+) -> Result<(DType, Endian)> {
+    let names = match names {
+        Value::Tuple(n) | Value::List(n) => n,
+        _ => return Err(Error::pickle("structured dtype without field names")),
+    };
+    let mut out = Vec::with_capacity(names.len());
+    let mut endian = Endian::Little;
+    let mut at = 0usize;
+    for n in names {
+        let key = n.as_str().ok_or_else(|| Error::pickle("structured dtype field name"))?;
+        let (fdt, off) = match fields.get(key) {
+            Some(Value::Tuple(t)) if t.len() >= 2 => (&t[0], t[1].as_i64().unwrap_or(-1)),
+            _ => return Err(Error::pickle(format!("structured dtype lacks field `{key}`"))),
+        };
+        let (dt, e) = as_dtype(fdt)?;
+        let size = dt
+            .size()
+            .ok_or_else(|| Error::unsupported("variable-size field in a structured dtype"))?;
+        if off != at as i64 {
+            return Err(Error::unsupported("structured numpy dtype with padding (align=True)"));
+        }
+        if e != Endian::Native {
+            endian = e;
+        }
+        at += size;
+        out.push(crate::dtype::Field { name: key.to_string(), dtype: dt, shape: Vec::new() });
+    }
+    if let Some(total) = itemsize {
+        if total != at as i64 {
+            return Err(Error::unsupported("structured numpy dtype with trailing padding"));
+        }
+    }
+    Ok((DType::Struct(out), endian))
 }
 
 /// `numpy.core.multiarray.scalar(dtype, raw_bytes)`.
@@ -122,9 +166,35 @@ pub(crate) fn build_array(state: &[Value], opts: &ReadOptions) -> Result<Value> 
             return Err(Error::invalid("pickled array exceeds max_alloc"));
         }
     }
+    decode_raw(dt, endian, shape, fortran, &raw, opts)
+}
+
+/// Turn a raw numpy buffer into a value: a record array becomes a [`Frame`]
+/// exactly as a structured `.npy` payload does, anything else an [`Array`].
+///
+/// [`Frame`]: crate::value::Frame
+pub(crate) fn decode_raw(
+    dt: DType,
+    endian: Endian,
+    shape: Vec<usize>,
+    fortran: bool,
+    raw: &[u8],
+    opts: &ReadOptions,
+) -> Result<Value> {
+    if let DType::Struct(_) = dt {
+        let h = crate::formats::npy::NpyHeader {
+            dtype: dt,
+            endian,
+            fortran_order: fortran,
+            shape,
+            data_offset: 0,
+            version: (1, 0),
+        };
+        return crate::formats::npy::decode_payload(&h, raw, opts);
+    }
     let read_shape: Vec<usize> =
         if fortran { shape.iter().rev().copied().collect() } else { shape.clone() };
-    let mut arr = from_bytes(&dt, endian, &read_shape, &raw)?;
+    let mut arr = from_bytes(&dt, endian, &read_shape, raw)?;
     if fortran && shape.len() > 1 {
         let axes: Vec<usize> = (0..shape.len()).rev().collect();
         arr = crate::formats::permute(arr, &axes);
@@ -151,12 +221,5 @@ pub fn frombuffer(args: &[Value], opts: &ReadOptions) -> Result<Value> {
         _ => return Err(Error::pickle("_frombuffer without a shape")),
     };
     let fortran = matches!(args.get(3), Some(Value::Str(s)) if s == "F");
-    let read_shape: Vec<usize> =
-        if fortran { shape.iter().rev().copied().collect() } else { shape.clone() };
-    let mut arr = crate::value::from_bytes(&dt, endian, &read_shape, raw)?;
-    if fortran && shape.len() > 1 {
-        let axes: Vec<usize> = (0..shape.len()).rev().collect();
-        arr = crate::formats::permute(arr, &axes);
-    }
-    Ok(Value::Array(crate::formats::apply_cast(arr, opts)?))
+    decode_raw(dt, endian, shape, fortran, raw, opts)
 }

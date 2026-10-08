@@ -25,6 +25,10 @@ pub fn values_array(v: &Value) -> Option<Array> {
         // Extension arrays such as StringArray and Categorical are pickled as
         // `__pyx_unpickle_NDArrayBacked(cls, checksum, state)`, where the state
         // tuple holds the dtype and the backing values.
+        // pandas 3 strings: an ArrowStringArray wrapping a pyarrow array.
+        Value::Object(o) if o.name == "_restore_array" => super::arrow::restore_array(o),
+        Value::Object(o) if o.name == "chunked_array" => super::arrow::chunked_array(o),
+        Value::Dict(d) => d.iter().find_map(|(_, x)| values_array(x)),
         Value::Object(o) => {
             for candidate in o.args.iter().chain(o.state.as_deref()) {
                 if let Some(a) = values_array(candidate) {

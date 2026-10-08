@@ -34,9 +34,9 @@ opcodes and protocol-5 out-of-band buffer opcodes.
 
 The virtual machine **never executes Python**. Constructors are resolved
 against an allow-list covering numpy, torch, `collections` and `_codecs`;
-`os`, `sys`, `subprocess` and similar are refused outright. Anything else
-becomes an inert `PyObject` recording the class name and its arguments, and
-only if `ReadOptions::allow_unknown_globals` is set.
+`os`, `sys`, `subprocess` and similar are refused unless
+`ReadOptions::allow_unknown_globals` is set. Anything else becomes an inert
+`PyObject` recording the class name and its arguments.
 
 numpy arrays are recognised in all three shapes numpy emits them: the classic
 `_reconstruct` plus `BUILD` sequence, the `scalar` path for zero-dimensional

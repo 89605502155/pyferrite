@@ -15,10 +15,10 @@ produces, from Rust, without linking against a single line of C.
 
 ```toml
 [dependencies]
-pyferrite = "0.0.1"
+pyferrite = "0.0.2"
 ```
 
-Version `0.0.1` is the first public release. The public API may still change
+Version `0.0.2` is an early release. The public API may still change
 before `0.1.0`.
 
 ### Feature flags
@@ -31,7 +31,7 @@ before `0.1.0`.
 To build with nothing but the standard library and `ndarray`:
 
 ```toml
-pyferrite = { version = "0.0.1", default-features = false }
+pyferrite = { version = "0.0.2", default-features = false }
 ```
 
 Uncompressed files still work in that configuration; a compressed one returns

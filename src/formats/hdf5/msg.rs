@@ -85,17 +85,27 @@ pub fn datatype(data: &[u8]) -> Result<(DType, Endian)> {
         3 => (DType::Bytes(size), Endian::Native),
         4 => (DType::U8, Endian::Native), // bitfield
         8 => {
-            // enumeration — treat as its base integer type
-            let _ = f1;
-            (
-                match size {
-                    1 => DType::U8,
-                    2 => DType::U16,
-                    4 => DType::U32,
-                    _ => DType::U64,
-                },
-                endian,
-            )
+            // Enumeration. h5py stores numpy booleans as a one-byte enum with
+            // the two members FALSE = 0 and TRUE = 1; read that back as bool.
+            // Any other enum is read as its base integer type.
+            let members = u16::from_le_bytes([f0, f1]);
+            let is_bool = size == 1
+                && members == 2
+                && contains(data, b"FALSE\0")
+                && contains(data, b"TRUE\0");
+            if is_bool {
+                (DType::Bool, Endian::Native)
+            } else {
+                (
+                    match size {
+                        1 => DType::U8,
+                        2 => DType::U16,
+                        4 => DType::U32,
+                        _ => DType::U64,
+                    },
+                    endian,
+                )
+            }
         }
         9 => (DType::Bytes(size), Endian::Native), // variable-length
         c => return Err(Error::unsupported(format!("HDF5 datatype class {c}"))),
@@ -184,4 +194,8 @@ pub fn filters(data: &[u8]) -> Result<Vec<u16>> {
         out.push(id);
     }
     Ok(out)
+}
+
+fn contains(hay: &[u8], needle: &[u8]) -> bool {
+    hay.windows(needle.len()).any(|w| w == needle)
 }

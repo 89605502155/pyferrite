@@ -75,7 +75,7 @@ cargo package                 # build the .crate archive
 cargo package --list          # what would be included
 cargo publish --dry-run       # full rehearsal
 cargo login <api-token>       # once, from https://crates.io/me
-cargo publish                 # for real; version 0.0.1 is permanent
+cargo publish                 # for real; a published version is permanent
 ```
 
 A published version can never be overwritten or deleted, only yanked, so run

@@ -56,8 +56,9 @@ not: the machine has no mechanism for calling anything.
    numpy, torch, `collections` and `_codecs` constructors. Each is implemented
    as a Rust function that builds the corresponding `Value`.
 2. **Blocklist.** `os`, `sys`, `subprocess`, `builtins.eval`, `builtins.exec`
-   and their relatives are refused with an error naming the module, even when
-   `allow_unknown_globals` is set.
+   and their relatives are refused with an error naming the module, unless
+   `allow_unknown_globals` is set, in which case they are captured inertly
+   like any other class so a suspicious file can be inspected.
 3. **Inert capture.** Anything else becomes a `PyObject` recording the module,
    class name and constructor arguments. Nothing runs. You can inspect it,
    edit it, and write it back out.

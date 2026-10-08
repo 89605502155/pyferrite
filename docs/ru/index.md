@@ -15,10 +15,10 @@ English version: [`../en/index.md`](../en/index.md)
 
 ```toml
 [dependencies]
-pyferrite = "0.0.1"
+pyferrite = "0.0.2"
 ```
 
-Версия `0.0.1` — первый публичный выпуск. До `0.1.0` публичный API ещё может
+Версия `0.0.2` — ранний выпуск. До `0.1.0` публичный API ещё может
 измениться.
 
 ### Флаги возможностей
@@ -31,7 +31,7 @@ pyferrite = "0.0.1"
 Сборка без всего, кроме стандартной библиотеки и `ndarray`:
 
 ```toml
-pyferrite = { version = "0.0.1", default-features = false }
+pyferrite = { version = "0.0.2", default-features = false }
 ```
 
 Несжатые файлы в этой конфигурации работают по-прежнему; сжатый вернёт
