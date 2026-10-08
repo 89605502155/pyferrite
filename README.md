@@ -1,5 +1,12 @@
 # pyferrite
 
+[![crates.io](https://img.shields.io/crates/v/pyferrite.svg)](https://crates.io/crates/pyferrite)
+[![docs.rs](https://docs.rs/pyferrite/badge.svg)](https://docs.rs/pyferrite)
+[![GitHub](https://img.shields.io/badge/github-89605502155%2Fpyferrite-blue?logo=github)](https://github.com/89605502155/pyferrite)
+[![licence: MIT](https://img.shields.io/badge/licence-MIT-green.svg)](https://github.com/89605502155/pyferrite/blob/main/LICENSE)
+
+Source code: <https://github.com/89605502155/pyferrite>, release [`v0.0.1`](https://github.com/89605502155/pyferrite/releases/tag/v0.0.1).
+
 Read and write Python machine-learning artefacts from Rust — `.npy`, `.npz`,
 `.pkl`, `.pt`, `.joblib` and `.h5` — with **no C, no C++, no FFI and no
 compiled artefacts from any other language**. If you have `rustc`, you can
@@ -165,7 +172,7 @@ itself and needs a more recent compiler.
 
 ## Licence
 
-MIT, see [`LICENSE`](LICENSE).
+MIT, see [`LICENSE`](https://github.com/89605502155/pyferrite/blob/main/LICENSE).
 
 Authors, Bryansk State Engineering Technological University (BGITU), Bryansk, Russia:
 

@@ -1,6 +1,8 @@
 # Changelog
 
-## 0.0.1 — first public release
+## [0.0.1](https://github.com/89605502155/pyferrite/releases/tag/v0.0.1) — first public release
+
+Source: <https://github.com/89605502155/pyferrite/tree/v0.0.1>
 
 Reads and writes `.npy`, `.npz`, `.pkl`, `.pt`, `.joblib` and `.h5` from Rust
 with no C, no C++, no FFI and no compiled artefacts from any other language.
