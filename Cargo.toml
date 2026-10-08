@@ -1,0 +1,48 @@
+[package]
+name = "pyferrite"
+version = "0.0.1"
+edition = "2021"
+rust-version = "1.70"
+authors = [
+    "Andrey Ferubko <ferubko1999@yandex.ru>",
+    "Oleg Kazakov <kazakov@bgitu.ru>",
+]
+license = "MIT"
+description = "Pure-Rust reader/writer for Python ML artefacts (npy, npz, pickle, pt, joblib, hdf5) with ndarray and polars interop, lazy streaming and user-controlled numeric down-casting."
+readme = "README.md"
+repository = "https://github.com/bgitu/pyferrite"
+homepage = "https://github.com/bgitu/pyferrite"
+documentation = "https://docs.rs/pyferrite"
+keywords = ["numpy", "pickle", "pytorch", "ndarray", "serialization"]
+categories = ["encoding", "science", "data-structures", "parser-implementations"]
+exclude = ["/tests/fixtures/*.bin", "/.github", "/scripts/tmp"]
+
+[dependencies]
+ndarray = { version = "0.15", default-features = false, features = ["std"] }
+num-complex = { version = "0.4", default-features = false, features = ["std"] }
+miniz_oxide = { version = "0.7", optional = true }
+polars = { version = "0.35", optional = true, default-features = false, features = ["dtype-full"] }
+# polars-core 0.35 calls `HashMap::raw_table_mut` without enabling hashbrown's
+# `raw` feature itself; enabling it here makes the polars bridge build.
+hashbrown = { version = "0.14", optional = true, default-features = false, features = ["raw"] }
+
+[features]
+default = ["deflate"]
+# zlib/deflate support for npz, joblib and HDF5 gzip filters (pure Rust).
+deflate = ["dep:miniz_oxide"]
+# polars DataFrame interop.
+polars-interop = ["dep:polars", "dep:hashbrown"]
+# Everything except polars (kept out of `full` because polars is heavy).
+full = ["deflate"]
+
+[lib]
+name = "pyferrite"
+path = "src/lib.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[package.metadata.docs.rs]
+all-features = true
